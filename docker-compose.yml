@@ -1,0 +1,72 @@
+version: "3"
+
+services:
+  Port:
+    container_name: Port
+    image: nginx:latest
+    volumes:
+      - ./port:/usr/share/nginx/html
+    ports:
+      - 8000:80
+    restart: unless-stopped 
+
+  nginx:
+    container_name: nginx-bridge
+    image: nginx
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./nginx/:/etc/nginx/
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    restart: unless-stopped
+
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    command: certonly --webroot -w /var/www/certbot --email eloy.gomes@icloud.com -d eloygomes.com.br --agree-tos --deploy-hook "sleep 90d" --non-interactive --keep-until-expiring
+    restart: unless-stopped 
+
+
+  mysql:
+    container_name: mysql-container
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: Jessie@123
+    ports:
+      - 3306:3306
+    volumes:
+      - mysql_data:/var/lib/mysql 
+    restart: unless-stopped 
+
+  serverLiveNLoud:
+    container_name: serverLiveNLoud
+    image: node:latest  
+    ports:
+      - "3000:8000"
+    networks:
+      - livenloud
+    volumes:
+      - ./serverLiveNLoud:/app  
+      
+    command: ["sleep", "inf"]  
+    restart: on-failure
+    
+  live:
+    container_name: live
+    image: nginx:latest
+    networks:
+      - livenloud
+    volumes:
+      - ./live:/usr/share/nginx/html
+      
+
+volumes:
+  mysql_data: 
+  serverLiveNLoud_data:  
+  
